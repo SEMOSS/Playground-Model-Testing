@@ -1,8 +1,13 @@
 from typing import Dict, Optional
-from src.utils.models import Model
+from src.utils.models import Model, models
 from src.tests.response_models import StandardResponse
 from src.tests.standard_tests import StandardTests
 from pydantic import BaseModel
+
+available_tests = [
+    "Standard Text Test",
+    "Prompt with Image URLs",
+]
 
 
 class TestSelections(BaseModel):
@@ -25,9 +30,9 @@ def run_selected_tests(
         results = TestResults()
         tester = StandardTests(models=[model], confirmer_model=confirmer_model)
         if selections.standard_text_test:
-            results.standard_text_test = tester.standard_text_test()
+            results.standard_text_test = tester.standard_text_test()[0]
         if selections.prompt_with_image_urls:
-            results.prompt_with_image_urls = tester.prompt_with_image_urls()
+            results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
         selected_responses[model.name] = results
     return selected_responses
 
@@ -38,8 +43,12 @@ def run_full_test_suite(
     full_suite_responses = {}
     for model in models:
         results = TestResults()
-        tester = StandardTests(models=models, confirmer_model=confirmer_model)
-        results.standard_text_test = tester.standard_text_test()
-        results.prompt_with_image_urls = tester.prompt_with_image_urls()
+        tester = StandardTests(models=[model], confirmer_model=confirmer_model)
+        results.standard_text_test = tester.standard_text_test()[0]
+        results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
         full_suite_responses[model.name] = results
     return full_suite_responses
+
+
+def get_available_models() -> list[Model]:
+    return models
