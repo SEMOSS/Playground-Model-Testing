@@ -107,6 +107,12 @@ with st.sidebar:
         help="Test image understanding capabilities",
     )
 
+    test_selections["basic_param_values"] = st.checkbox(
+        "Basic Param Values Test",
+        value=True,
+        help="Run test with basic parameter values (e.g., temperature, max_tokens)",
+    )
+
     st.divider()
 
     # Confirmation model selection
@@ -219,7 +225,38 @@ else:
                             except:
                                 st.info(result.confirmation_response)
 
-                st.divider()
+                        st.divider()
+
+                    # Basic Param Values Test Results
+                    if test_results.basic_param_values:
+                        st.subheader("📐 Basic Param Values Test")
+                        result = test_results.basic_param_values
+
+                        col1, col2, col3 = st.columns([2, 1, 1])
+                        with col1:
+                            st.markdown(f"**Model:** {result.model_name}")
+                        with col2:
+                            st.markdown(f"**Client:** {result.client}")
+                        with col3:
+                            if result.success:
+                                st.markdown("**Status:** ✅ Success")
+                            else:
+                                st.markdown("**Status:** ❌ Failed")
+
+                        st.markdown("**Response:**")
+                        st.text_area(
+                            "Model Response",
+                            value=result.response,
+                            height=100,
+                            key=f"basic_param_{idx}",
+                            label_visibility="collapsed",
+                        )
+
+                        if result.confirmation_response:
+                            st.markdown("**Confirmation:**")
+                            st.info(result.confirmation_response)
+
+                        st.divider()
 
         except Exception as e:
             progress_bar.empty()

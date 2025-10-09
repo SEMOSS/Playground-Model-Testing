@@ -7,17 +7,20 @@ from pydantic import BaseModel
 available_tests = [
     "Standard Text Test",
     "Prompt with Image URLs",
+    "Basic Param Values Test",
 ]
 
 
 class TestSelections(BaseModel):
     standard_text_test: bool = False
     prompt_with_image_urls: bool = False
+    basic_param_values: bool = False
 
 
 class TestResults(BaseModel):
     standard_text_test: Optional[StandardResponse] = None
     prompt_with_image_urls: Optional[StandardResponse] = None
+    basic_param_values: Optional[StandardResponse] = None
 
 
 def run_selected_tests(
@@ -29,10 +32,14 @@ def run_selected_tests(
     for model in models:
         results = TestResults()
         tester = StandardTests(models=[model], confirmer_model=confirmer_model)
+
         if selections.standard_text_test:
             results.standard_text_test = tester.standard_text_test()[0]
         if selections.prompt_with_image_urls:
             results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
+        if selections.basic_param_values:
+            results.basic_param_values = tester.basic_param_values()[0]
+
         selected_responses[model.name] = results
     return selected_responses
 
@@ -46,6 +53,7 @@ def run_full_test_suite(
         tester = StandardTests(models=[model], confirmer_model=confirmer_model)
         results.standard_text_test = tester.standard_text_test()[0]
         results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
+        results.basic_param_values = tester.basic_param_values()[0]
         full_suite_responses[model.name] = results
     return full_suite_responses
 

@@ -25,6 +25,14 @@ class PixelMaker:
             pixel = self._with_image_urls(pixel, selections.image_urls)
         if selections.image_base64:
             pixel = self._with_image_base64(pixel, selections.image_base64)
+        if selections.param_dict:
+            params = ",".join(
+                [
+                    f'"{key}": {repr(value)}'
+                    for key, value in selections.param_dict.items()
+                ]
+            )
+            pixel += f", paramValues=[{{{params}}}]"
 
         pixel += ")"
         return pixel
