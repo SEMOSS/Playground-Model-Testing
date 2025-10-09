@@ -52,16 +52,6 @@ To add a new model, update the `models` list in `src/utils/models.py` with the n
 5. Update the Streamlit UI in `main.py`
 
 ## Test to Add
-- [ ] **Basic Param Values**: Test model's ability to handle basic param values like temperature, max tokens, etc.
-```bash
-AskPlayground(
-engine=["b0d18f4b-ff2c-4563-8f9d-57efbff53d60"],
-roomId=["9431b571-b8d0-4502-80a5-52b3cc50cb18"],
-command=["<encode>Tell me a story about World War 2.</encode>"],
-mcpToolID=[],
-paramValues=[{"temperature": 0.7, "max_tokens": 2000, "top_p": 0.9}]
-);
-```
 
 - [ ] **Prompt with Base64 Images**: Test model's ability to handle prompts containing base64-encoded images.
 ```bash
