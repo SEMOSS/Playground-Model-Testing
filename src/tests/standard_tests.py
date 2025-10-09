@@ -66,6 +66,42 @@ class StandardTests:
 
         return responses
 
+    def basic_param_values(self) -> list[StandardResponse]:
+        responses = []
+        for model in self.models:
+            selections = PixelSelections(
+                room_id=self.room_id,
+                model_id=model.id,
+                prompt="Tell me a story about World War 2.",
+                param_dict={"temperature": 0.7, "max_tokens": 2000, "top_p": 0.9},
+            )
+            pixel = self.pixel_maker.create_ask_playground_pixel(selections)
+
+            try:
+                response = self.semoss_client.run_pixel(pixel)
+                response = self._extract_text_response(response)
+
+                standard_response_with_confirmation = StandardResponse(
+                    model_name=model.name,
+                    model_id=model.id,
+                    client=model.client,
+                    response=response,
+                    success=True,
+                )
+                responses.append(standard_response_with_confirmation)
+
+            except Exception as e:
+                standard_response = StandardResponse(
+                    model_name=model.name,
+                    model_id=model.id,
+                    client=model.client,
+                    response=str(e),
+                    success=False,
+                )
+                responses.append(standard_response)
+
+        return responses
+
     def prompt_with_image_urls(self) -> list[StandardResponse]:
         responses = []
         for model in self.models:
