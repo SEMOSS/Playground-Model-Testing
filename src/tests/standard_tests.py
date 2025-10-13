@@ -141,3 +141,194 @@ class StandardTests:
                 responses.append(standard_response)
 
         return responses
+
+    def test_tool_calling(self) -> list[StandardResponse]:
+        responses = []
+
+        engine_id = "692215ed-b693-45df-a464-56a99d397d27"
+        mcpToolID = "29e9e371-9243-4293-ad3b-4be08ef95ab5"
+        room_id = self.room_id
+
+        def log_tool_error(responses, response_text):
+            standard_response = StandardResponse(
+                model_name="ToolCall-Test",
+                model_id=mcpToolID,
+                client="SEMOSS",
+                response=response_text,
+                success=False,
+            )
+            responses.append(standard_response)
+            return responses
+
+        # PHASE 1: Single tool call
+        # STEP 1: AskPlayground with mcpToolID to get tool call details
+        ask_playground_pixel = f'AskPlayground(roomId=["{room_id}"], engine=["{engine_id}"], mcpToolID=["{mcpToolID}"], command=["What is stock price of META?"])'
+
+        try:
+            ask_playground_response = self.semoss_client.run_pixel(ask_playground_pixel)
+            tool_response = ask_playground_response.get("responseMessage", None).get(
+                "tool_responses", None
+            )[0]
+        except Exception as e:
+            response_text = f"PHASE 1: Failed to run AskPlayground pixel: {e}"
+            return log_tool_error(responses, response_text)
+
+        param_values = tool_response.get("arguments", {})
+        tool_call_id = tool_response.get("id", None)
+
+        # STEP 2: RunMCPTool with extracted parameters
+        run_mcp_tool_pixel = f'RunMCPTool(project=["{mcpToolID}"], function=["get_stock_price"], paramValues=[{param_values}])'
+
+        try:
+            run_mcp_tool_response = self.semoss_client.run_pixel(run_mcp_tool_pixel)
+            if not run_mcp_tool_response:
+                return log_tool_error(
+                    responses, "PHASE 1: Run MCP Tool response is empty"
+                )
+        except Exception as e:
+            return log_tool_error(
+                responses, f"PHASE 1: Failed to run MCP Tool pixel: {e}"
+            )
+
+        add_tool_execution_pixel = f'AddToolExecution(engine=["{engine_id}"], roomId=["{room_id}"], toolId=["{tool_call_id}"], toolName=["get_stock_price"], tool_execution_response=[{run_mcp_tool_response}])'
+
+        try:
+            add_tool_execution_response = self.semoss_client.run_pixel(
+                add_tool_execution_pixel
+            )
+            if not add_tool_execution_response:
+                return log_tool_error(
+                    responses, "PHASE 1: Add Tool Execution response is empty"
+                )
+
+            standard_response = StandardResponse(
+                model_name="ToolCall-Test",
+                model_id=mcpToolID,
+                client="SEMOSS",
+                response=f"Tool execution added successfully: {add_tool_execution_response}",
+                success=True,
+            )
+            responses.append(standard_response)
+        except Exception as e:
+            return log_tool_error(
+                responses, f"PHASE 1: Failed to run Add Tool Execution pixel: {e}"
+            )
+
+        # PHASE 2: Multiple tool calls
+        ask_playground_pixel2 = f'AskPlayground(roomId=["{room_id}"], engine=["{engine_id}"], mcpToolID=["{mcpToolID}"], command=["What about TSLA and MSFT?"])'
+
+        try:
+            ask_playground_response = self.semoss_client.run_pixel(
+                ask_playground_pixel2
+            )
+            tool_responses = ask_playground_response.get("responseMessage", None).get(
+                "tool_responses", None
+            )
+        except Exception as e:
+            return log_tool_error(
+                responses, f"PHASE 2: Failed to run AskPlayground pixel: {e}"
+            )
+
+        if not isinstance(tool_responses, list):
+            return log_tool_error(
+                responses,
+                "PHASE 2: Tool response is not a list, expected multiple tool calls",
+            )
+
+        if len(tool_responses) < 2:
+            return log_tool_error(
+                responses, f"PHASE 2: Expected 2 tool calls, got {len(tool_responses)}"
+            )
+
+        tool_execution_results = []
+
+        for i, tool_response in enumerate(tool_responses):
+            tool_call_id = tool_response.get("id", None)
+            param_values = tool_response.get("arguments", {})
+
+            standard_response = StandardResponse(
+                model_name="ToolCall-Test",
+                model_id=mcpToolID,
+                client="SEMOSS",
+                response=f"Processing tool call {i+1}: ID={tool_call_id}, Params={param_values}",
+                success=True,
+            )
+
+            responses.append(standard_response)
+
+            run_mcp_tool_pixel = f'RunMCPTool(project=["{mcpToolID}"], function=["get_stock_price"], paramValues=[{param_values}])'
+
+            try:
+                run_mcp_tool_response = self.semoss_client.run_pixel(run_mcp_tool_pixel)
+                if not run_mcp_tool_response:
+                    return log_tool_error(
+                        responses, f"PHASE 2 TOOL {i+1}: Run MCP Tool response is empty"
+                    )
+            except Exception as e:
+                return log_tool_error(
+                    responses, f"PHASE 2 TOOL {i+1}: Failed to run MCP Tool pixel: {e}"
+                )
+
+            tool_execution_results.append(
+                {"tool_call_id": tool_call_id, "tool_response": run_mcp_tool_response}
+            )
+
+        for i, execution_result in enumerate(tool_execution_results):
+            add_tool_execution_pixel = f'AddToolExecution(engine=["{engine_id}"], roomId=["{room_id}"], toolId=["{execution_result["tool_call_id"]}"], toolName=["get_stock_price"], tool_execution_response=[{execution_result["tool_response"]}])'
+
+            try:
+                add_tool_execution_response = self.semoss_client.run_pixel(
+                    add_tool_execution_pixel
+                )
+                if not add_tool_execution_response:
+                    return log_tool_error(
+                        responses,
+                        f"PHASE 2 TOOL {i+1}: Add Tool Execution response is empty",
+                    )
+
+                standard_response = StandardResponse(
+                    model_name="ToolCall-Test",
+                    model_id=mcpToolID,
+                    client="SEMOSS",
+                    response=f"Tool execution {i+1} added successfully: {add_tool_execution_response}",
+                    success=True,
+                )
+                responses.append(standard_response)
+
+            except Exception as e:
+                return log_tool_error(
+                    responses,
+                    f"PHASE 2 TOOL {i+1}: Failed to run Add Tool Execution pixel: {e}",
+                )
+
+        standard_response = StandardResponse(
+            model_name="ToolCall-Test",
+            model_id=mcpToolID,
+            client="SEMOSS",
+            response="All tool executions completed successfully!",
+            success=True,
+        )
+        responses.append(standard_response)
+
+        # Phase 3: Summmary
+        ask_playground_pixel = f'AskPlayground(roomId=["{room_id}"], engine=["{engine_id}"], command=["Can you create a summary of the stock prices we discussed?"])'
+        try:
+            ask_playground_response = self.semoss_client.run_pixel(ask_playground_pixel)
+            text_response = ask_playground_response.get("responseMessage", None)
+            if not text_response:
+                return log_tool_error(
+                    responses, "PHASE 3: AskPlayground response is empty"
+                )
+            standard_response = StandardResponse(
+                model_name="ToolCall-Test",
+                model_id=mcpToolID,
+                client="SEMOSS",
+                response=f"Summary response: {text_response}",
+                success=True,
+            )
+            responses.append(standard_response)
+        except Exception as e:
+            return log_tool_error(
+                responses, f"PHASE 3: Failed to run AskPlayground pixel: {e}"
+            )
+        return responses
