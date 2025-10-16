@@ -113,6 +113,12 @@ with st.sidebar:
         help="Run test with basic parameter values (e.g., temperature, max_tokens)",
     )
 
+    test_selections["test_tool_calling"] = st.checkbox(
+        "Tool Calling Test",
+        value=True,
+        help="Test the full tool calling script (ie. sending a prompt with tool IDs, getting a response with tool calls, executing the tool calls, sending the tool results back to the model, and getting a final response).",
+    )
+
     st.divider()
 
     # Confirmation model selection
@@ -257,6 +263,38 @@ else:
                             st.info(result.confirmation_response)
 
                         st.divider()
+
+                    # Tool Calling Test Results
+                    if test_results.test_tool_calling:
+                        st.subheader("📐 Tool Calling Values Test")
+                        results = test_results.test_tool_calling
+
+                        for i, result in enumerate(results):
+                            col1, col2, col3 = st.columns([2, 1, 1])
+                            with col1:
+                                st.markdown(f"**Model:** {result.model_name}")
+                            with col2:
+                                st.markdown(f"**Client:** {result.client}")
+                            with col3:
+                                if result.success:
+                                    st.markdown("**Status:** ✅ Success")
+                                else:
+                                    st.markdown("**Status:** ❌ Failed")
+
+                            st.markdown("**Response:**")
+                            st.text_area(
+                                "Model Response",
+                                value=result.response,
+                                height=100,
+                                key=f"tool_calling_{idx}_{i}",
+                                label_visibility="collapsed",
+                            )
+
+                            if result.confirmation_response:
+                                st.markdown("**Confirmation:**")
+                                st.info(result.confirmation_response)
+
+                            st.divider()
 
         except Exception as e:
             progress_bar.empty()
