@@ -113,6 +113,12 @@ with st.sidebar:
         help="Run test with basic parameter values (e.g., temperature, max_tokens)",
     )
 
+    test_selections["structured_json_test"] = st.checkbox(
+        "Structured JSON Test",
+        value=True,
+        help="Run test with structured json output format",
+    )
+
     st.divider()
 
     # Confirmation model selection
@@ -249,6 +255,37 @@ else:
                             value=result.response,
                             height=100,
                             key=f"basic_param_{idx}",
+                            label_visibility="collapsed",
+                        )
+
+                        if result.confirmation_response:
+                            st.markdown("**Confirmation:**")
+                            st.info(result.confirmation_response)
+
+                        st.divider()
+
+                    # Structured JSON Test Results
+                    if test_results.structured_json_test:
+                        st.subheader("📝 Structured JSON Test")
+                        result = test_results.structured_json_test
+
+                        col1, col2, col3 = st.columns([2, 1, 1])
+                        with col1:
+                            st.markdown(f"**Model:** {result.model_name}")
+                        with col2:
+                            st.markdown(f"**Client:** {result.client}")
+                        with col3:
+                            if result.success:
+                                st.markdown("**Status:** ✅ Success")
+                            else:
+                                st.markdown("**Status:** ❌ Failed")
+
+                        st.markdown("**Response:**")
+                        st.text_area(
+                            "Model Response",
+                            value=result.response,
+                            height=100,
+                            key=f"std_text_{idx}",
                             label_visibility="collapsed",
                         )
 

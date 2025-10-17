@@ -141,3 +141,57 @@ class StandardTests:
                 responses.append(standard_response)
 
         return responses
+
+    def structured_json_test(self) -> list[StandardResponse]:
+        responses = []
+        for model in self.models:
+            selections = PixelSelections(
+                room_id=self.room_id,
+                model_id=model.id,
+                prompt="Name a few Manchester United players you know with their positions, countries, and skill ratings.",
+                param_dict = {
+                            "schema": 
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "players": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {"type": "string"},
+                                                    "position": {"type": "string"},
+                                                    "country": {"type": "string"},
+                                                    "skill": {"type": "integer"},
+                                                },
+                                                "required": ["name", "position", "country", "skill"],
+                                            },
+                                        }
+                                    },
+                                    "required": ["players"],
+                                }
+                            }
+            )
+            pixel = self.pixel_maker.create_ask_playground_pixel(selections)
+
+            try:
+                response = self.semoss_client.run_pixel(pixel)
+                standard_response = StandardResponse(
+                    model_name=model.name,
+                    model_id=model.id,
+                    client=model.client,
+                    response=self._extract_text_response(response),
+                    success=True,
+                )
+                responses.append(standard_response)
+            except Exception as e:
+                standard_response = StandardResponse(
+                    model_name=model.name,
+                    model_id=model.id,
+                    client=model.client,
+                    response=str(e),
+                    success=False,
+                )
+                responses.append(standard_response)
+
+        return responses
