@@ -8,6 +8,7 @@ available_tests = [
     "Standard Text Test",
     "Prompt with Image URLs",
     "Basic Param Values Test",
+    "Tool calling with tool choice",
 ]
 
 
@@ -15,12 +16,14 @@ class TestSelections(BaseModel):
     standard_text_test: bool = False
     prompt_with_image_urls: bool = False
     basic_param_values: bool = False
+    tool_calling_with_tool_choice: bool = False
 
 
 class TestResults(BaseModel):
     standard_text_test: Optional[StandardResponse] = None
     prompt_with_image_urls: Optional[StandardResponse] = None
     basic_param_values: Optional[StandardResponse] = None
+    tool_calling_with_tool_choice: Optional[StandardResponse] = None
 
 
 def run_selected_tests(
@@ -39,6 +42,8 @@ def run_selected_tests(
             results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
         if selections.basic_param_values:
             results.basic_param_values = tester.basic_param_values()[0]
+        if selections.tool_calling_with_tool_choice:
+            results.tool_calling_with_tool_choice = tester.tool_calling_with_tool_choice()[0]
 
         selected_responses[model.name] = results
     return selected_responses
@@ -54,6 +59,7 @@ def run_full_test_suite(
         results.standard_text_test = tester.standard_text_test()[0]
         results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
         results.basic_param_values = tester.basic_param_values()[0]
+        results.tool_calling_with_tool_choice = tester.tool_calling_with_tool_choice()[0]
         full_suite_responses[model.name] = results
     return full_suite_responses
 
