@@ -9,6 +9,7 @@ available_tests = [
     "Prompt with Image URLs",
     "Prompt with Base64 Images",
     "Basic Param Values Test",
+    "Tool calling with tool choice",
 ]
 
 
@@ -17,6 +18,7 @@ class TestSelections(BaseModel):
     prompt_with_image_urls: bool = False
     prompt_with_base64_images: bool = False
     basic_param_values: bool = False
+    tool_calling_with_tool_choice: bool = False
 
 
 class TestResults(BaseModel):
@@ -24,6 +26,7 @@ class TestResults(BaseModel):
     prompt_with_image_urls: Optional[StandardResponse] = None
     prompt_with_base64_images: Optional[StandardResponse] = None
     basic_param_values: Optional[StandardResponse] = None
+    tool_calling_with_tool_choice: Optional[StandardResponse] = None
 
 
 def run_selected_tests(
@@ -44,6 +47,8 @@ def run_selected_tests(
             results.prompt_with_base64_images = tester.prompt_with_base64_images()[0]
         if selections.basic_param_values:
             results.basic_param_values = tester.basic_param_values()[0]
+        if selections.tool_calling_with_tool_choice:
+            results.tool_calling_with_tool_choice = tester.tool_calling_with_tool_choice()[0]
 
         selected_responses[model.name] = results
     return selected_responses
@@ -60,6 +65,7 @@ def run_full_test_suite(
         results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
         results.prompt_with_base64_images = tester.prompt_with_base64_images()[0]
         results.basic_param_values = tester.basic_param_values()[0]
+        results.tool_calling_with_tool_choice = tester.tool_calling_with_tool_choice()[0]
         full_suite_responses[model.name] = results
     return full_suite_responses
 
