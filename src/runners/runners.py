@@ -7,6 +7,7 @@ from pydantic import BaseModel
 available_tests = [
     "Standard Text Test",
     "Prompt with Image URLs",
+    "Prompt with Base64 Images",
     "Basic Param Values Test",
     "Tool calling with tool choice",
 ]
@@ -15,6 +16,7 @@ available_tests = [
 class TestSelections(BaseModel):
     standard_text_test: bool = False
     prompt_with_image_urls: bool = False
+    prompt_with_base64_images: bool = False
     basic_param_values: bool = False
     tool_calling_with_tool_choice: bool = False
 
@@ -22,6 +24,7 @@ class TestSelections(BaseModel):
 class TestResults(BaseModel):
     standard_text_test: Optional[StandardResponse] = None
     prompt_with_image_urls: Optional[StandardResponse] = None
+    prompt_with_base64_images: Optional[StandardResponse] = None
     basic_param_values: Optional[StandardResponse] = None
     tool_calling_with_tool_choice: Optional[StandardResponse] = None
 
@@ -40,6 +43,8 @@ def run_selected_tests(
             results.standard_text_test = tester.standard_text_test()[0]
         if selections.prompt_with_image_urls:
             results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
+        if selections.prompt_with_base64_images:
+            results.prompt_with_base64_images = tester.prompt_with_base64_images()[0]
         if selections.basic_param_values:
             results.basic_param_values = tester.basic_param_values()[0]
         if selections.tool_calling_with_tool_choice:
@@ -58,6 +63,7 @@ def run_full_test_suite(
         tester = StandardTests(models=[model], confirmer_model=confirmer_model)
         results.standard_text_test = tester.standard_text_test()[0]
         results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
+        results.prompt_with_base64_images = tester.prompt_with_base64_images()[0]
         results.basic_param_values = tester.basic_param_values()[0]
         results.tool_calling_with_tool_choice = tester.tool_calling_with_tool_choice()[0]
         full_suite_responses[model.name] = results
