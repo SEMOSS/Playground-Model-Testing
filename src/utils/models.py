@@ -58,3 +58,7 @@ models = [
     #     client="OpenAI - Chat Completions",
     # ),
 ]
+
+
+def get_models() -> list[Model]:
+    return models

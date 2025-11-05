@@ -125,6 +125,12 @@ with st.sidebar:
         help="Run test with structured json output format",
     )
 
+    test_selections["prompt_with_base64_images"] = st.checkbox(
+        "Prompt with Base64 Images",
+        value=True,
+        help="Test image understanding capabilities",
+    )
+
     st.divider()
 
     # Confirmation model selection
@@ -328,6 +334,47 @@ else:
                         if result.confirmation_response:
                             st.markdown("**Confirmation:**")
                             st.info(result.confirmation_response)
+
+                        st.divider()
+
+                    if test_results.prompt_with_base64_images:
+                        st.subheader("🖼️ Prompt with Base64 Images")
+                        result = test_results.prompt_with_base64_images
+
+                        col1, col2, col3 = st.columns([2, 1, 1])
+                        with col1:
+                            st.markdown(f"**Model:** {result.model_name}")
+                        with col2:
+                            st.markdown(f"**Client:** {result.client}")
+                        with col3:
+                            if result.success:
+                                st.markdown("**Status:** ✅ Success")
+                            else:
+                                st.markdown("**Status:** ❌ Failed")
+
+                        st.markdown("**Response:**")
+                        st.text_area(
+                            "Model Response",
+                            value=result.response,
+                            height=100,
+                            key=f"img_b64_{idx}",
+                            label_visibility="collapsed",
+                        )
+
+                        if result.confirmation_response:
+                            st.markdown("**Confirmation:**")
+                            try:
+                                conf_data = json.loads(result.confirmation_response)
+                                if conf_data.get("confirmed"):
+                                    st.success(
+                                        f"✅ Confirmed: {conf_data.get('confirmation_response', 'N/A')}"
+                                    )
+                                else:
+                                    st.error(
+                                        f"❌ Not Confirmed: {conf_data.get('confirmation_response', 'N/A')}"
+                                    )
+                            except:
+                                st.info(result.confirmation_response)
 
                         st.divider()
 
