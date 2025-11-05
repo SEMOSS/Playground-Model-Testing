@@ -1,14 +1,19 @@
 from typing import Dict, Optional
 from src.utils.models import Model, models
 from src.tests.response_models import StandardResponse
-from src.tests.standard_tests import StandardTests
+from src.tests.standard_text_test import StandardTextTest
+from src.tests.basic_param_values_test import BasicParamValuesTest
+from src.tests.image_urls_test import ImageURLsTest
+from src.tests.tool_calling_with_tool_choice_test import ToolCallingWithToolChoiceTest
+from src.tests.structured_json_test import StructuredJSONTest
 from pydantic import BaseModel
 
 available_tests = [
     "Standard Text Test",
-    "Prompt with Image URLs",
     "Basic Param Values Test",
+    "Prompt with Image URLs",
     "Tool calling with tool choice",
+    "Structured JSON Output Test",
 ]
 
 
@@ -17,6 +22,7 @@ class TestSelections(BaseModel):
     prompt_with_image_urls: bool = False
     basic_param_values: bool = False
     tool_calling_with_tool_choice: bool = False
+    structured_json_test: bool = False
 
 
 class TestResults(BaseModel):
@@ -24,6 +30,7 @@ class TestResults(BaseModel):
     prompt_with_image_urls: Optional[StandardResponse] = None
     basic_param_values: Optional[StandardResponse] = None
     tool_calling_with_tool_choice: Optional[StandardResponse] = None
+    structured_json_test: Optional[StandardResponse] = None
 
 
 def run_selected_tests(
@@ -34,34 +41,38 @@ def run_selected_tests(
     selected_responses = {}
     for model in models:
         results = TestResults()
-        tester = StandardTests(models=[model], confirmer_model=confirmer_model)
+
+        standard_text_tester = StandardTextTest(
+            models=[model], confirmer_model=confirmer_model
+        )
+        basic_param_values_tester = BasicParamValuesTest(
+            models=[model], confirmer_model=confirmer_model
+        )
+        image_urls_tester = ImageURLsTest(
+            models=[model], confirmer_model=confirmer_model
+        )
+        tool_calling_with_tool_choice_tester = ToolCallingWithToolChoiceTest(
+            models=[model], confirmer_model=confirmer_model
+        )
+        structured_json_tester = StructuredJSONTest(
+            models=[model], confirmer_model=confirmer_model
+        )
 
         if selections.standard_text_test:
-            results.standard_text_test = tester.standard_text_test()[0]
-        if selections.prompt_with_image_urls:
-            results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
+            results.standard_text_test = standard_text_tester.test()[0]
         if selections.basic_param_values:
-            results.basic_param_values = tester.basic_param_values()[0]
+            results.basic_param_values = basic_param_values_tester.test()[0]
+        if selections.prompt_with_image_urls:
+            results.prompt_with_image_urls = image_urls_tester.test()[0]
         if selections.tool_calling_with_tool_choice:
-            results.tool_calling_with_tool_choice = tester.tool_calling_with_tool_choice()[0]
+            results.tool_calling_with_tool_choice = (
+                tool_calling_with_tool_choice_tester.test()[0]
+            )
+        if selections.structured_json_test:
+            results.structured_json_test = structured_json_tester.test()[0]
 
         selected_responses[model.name] = results
     return selected_responses
-
-
-def run_full_test_suite(
-    models: list[Model], confirmer_model: Optional[str] = "gpt-4.1-nano"
-) -> Dict[str, TestResults]:
-    full_suite_responses = {}
-    for model in models:
-        results = TestResults()
-        tester = StandardTests(models=[model], confirmer_model=confirmer_model)
-        results.standard_text_test = tester.standard_text_test()[0]
-        results.prompt_with_image_urls = tester.prompt_with_image_urls()[0]
-        results.basic_param_values = tester.basic_param_values()[0]
-        results.tool_calling_with_tool_choice = tester.tool_calling_with_tool_choice()[0]
-        full_suite_responses[model.name] = results
-    return full_suite_responses
 
 
 def get_available_models() -> list[Model]:

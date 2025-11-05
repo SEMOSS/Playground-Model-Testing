@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 
 
@@ -8,6 +8,7 @@ class StandardResponse(BaseModel):
     client: str
     response: str
     success: bool
+    pixel: List[str]
     confirmation_response: Optional[str] = None
 
 
