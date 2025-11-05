@@ -260,7 +260,7 @@ else:
                             "Model Response",
                             value=result.response,
                             height=100,
-                            key=f"basic_param_{idx}",
+                            key=f"tool_choice_{idx}",
                             label_visibility="collapsed",
                         )
 
@@ -321,7 +321,7 @@ else:
                             "Model Response",
                             value=result.response,
                             height=100,
-                            key=f"std_text_{idx}",
+                            key=f"structured_json_{idx}",
                             label_visibility="collapsed",
                         )
 

@@ -21,6 +21,50 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
         for model in self.models:
             room_id = self.room_id
             model_id = model.id
+            instructions = {
+                "instructions": "",
+                "mcp": [
+                    {
+                        "id": "29e9e371-9243-4293-ad3b-4be08ef95ab5",
+                        "type": "PROJECT",
+                        "name": "MCP",
+                    }
+                ],
+                "temperature": 0.3,
+            }
+
+            update_room_pixel = (
+                f'UpdateRoomOptions(roomId="{room_id}", roomOptions=[{instructions}]);'
+            )
+
+            try:
+                update_room_response = self.semoss_client.run_pixel(update_room_pixel)
+                print(update_room_response)
+                if not update_room_response:
+                    responses.append(
+                        StandardResponse(
+                            model_name=model.name,
+                            model_id=model.id,
+                            client=model.client,
+                            response="Failed to update room options: Empty response",
+                            success=False,
+                            pixel=[update_room_pixel],
+                        )
+                    )
+                    continue
+            except Exception as e:
+                responses.append(
+                    StandardResponse(
+                        model_name=model.name,
+                        model_id=model.id,
+                        client=model.client,
+                        response=f"Failed to update room options: {e}",
+                        success=False,
+                        pixel=[update_room_pixel],
+                    )
+                )
+                continue
+
             function_name = "get_stock_price"
             selections = PixelSelections(
                 room_id=self.room_id,
@@ -30,18 +74,32 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                 param_dict={"tool_choice": {"type": "AUTO"}},
             )
 
-            pixel = self.pixel_maker.create_ask_playground_pixel(selections)
-            print(f"Running MCP Tool Pixel: {pixel}")
+            ask_playground_pixel = self.pixel_maker.create_ask_playground_pixel(
+                selections
+            )
+            print(f"Running MCP Tool Pixel: {ask_playground_pixel}")
 
             try:
-                ask_playground_response = self.semoss_client.run_pixel(pixel)
+                ask_playground_response = self.semoss_client.run_pixel(
+                    ask_playground_pixel
+                )
                 responseMessage = ask_playground_response.get("responseMessage", None)
                 tool_response = responseMessage.get("tool_responses", None)
                 if tool_response:
                     tool_response = tool_response[0]
                 print(f"Tool Response: {tool_response}")
             except Exception as e:
-                raise RuntimeError(f"PHASE 1: Failed to run AskPlayground pixel: {e}")
+                responses.append(
+                    StandardResponse(
+                        model_name=model.name,
+                        model_id=model.id,
+                        client=model.client,
+                        response=f"PHASE 1: Failed to run AskPlayground pixel: {e}",
+                        success=False,
+                        pixel=[update_room_pixel, ask_playground_pixel],
+                    )
+                )
+                continue
 
             if tool_response:
                 param_values = tool_response.get("arguments", {})
@@ -53,9 +111,37 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                         run_mcp_tool_pixel
                     )
                     if not run_mcp_tool_response:
-                        raise ValueError("PHASE 1: Run MCP Tool response is empty")
+                        responses.append(
+                            StandardResponse(
+                                model_name=model.name,
+                                model_id=model.id,
+                                client=model.client,
+                                response=f"Failed to run RunMCPTool",
+                                success=False,
+                                pixel=[
+                                    update_room_pixel,
+                                    ask_playground_pixel,
+                                    run_mcp_tool_pixel,
+                                ],
+                            )
+                        )
+                        continue
                 except Exception as e:
-                    raise RuntimeError(f"PHASE 1: Failed to run MCP Tool pixel: {e}")
+                    responses.append(
+                        StandardResponse(
+                            model_name=model.name,
+                            model_id=model.id,
+                            client=model.client,
+                            response=f"Failed to run RunMCPToo: {e}",
+                            success=False,
+                            pixel=[
+                                update_room_pixel,
+                                ask_playground_pixel,
+                                run_mcp_tool_pixel,
+                            ],
+                        )
+                    )
+                    continue
 
                 add_tool_execution_pixel = f'AddToolExecution(engine=["{model_id}"], roomId=["{room_id}"], toolId=["{tool_call_id}"], toolName=["{function_name}"], tool_execution_response=[{run_mcp_tool_response}])'
 
@@ -64,18 +150,44 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                         add_tool_execution_pixel
                     )
                     if not add_tool_execution_response:
-                        raise ValueError(
-                            "PHASE 1: Add Tool Execution response is empty"
+                        responses.append(
+                            StandardResponse(
+                                model_name=model.name,
+                                model_id=model.id,
+                                client=model.client,
+                                response=f"Failed to run RunMCPTool",
+                                success=False,
+                                pixel=[
+                                    update_room_pixel,
+                                    ask_playground_pixel,
+                                    run_mcp_tool_pixel,
+                                    add_tool_execution_pixel,
+                                ],
+                            )
                         )
+                        continue
 
                     print(
                         "Tool execution added successfully:",
                         add_tool_execution_response,
                     )
                 except Exception as e:
-                    raise RuntimeError(
-                        f"PHASE 1: Failed to run Add Tool Execution pixel: {e}"
+                    responses.append(
+                        StandardResponse(
+                            model_name=model.name,
+                            model_id=model.id,
+                            client=model.client,
+                            response=f"Failed to run RunMCPTool: {e}",
+                            success=False,
+                            pixel=[
+                                update_room_pixel,
+                                ask_playground_pixel,
+                                run_mcp_tool_pixel,
+                                add_tool_execution_pixel,
+                            ],
+                        )
                     )
+                    continue
 
             try:
                 if tool_response:
@@ -83,23 +195,41 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                 else:
                     response = self._extract_text_response(ask_playground_response)
 
+                confirmation = self.openai_confirmer.confirm_tool_calling_response(
+                    response
+                )
+
                 standard_response_with_confirmation = StandardResponse(
                     model_name=model.name,
                     model_id=model.id,
                     client=model.client,
                     response=response,
-                    success=True,
+                    success=confirmation.confirmed,
+                    pixel=[
+                        update_room_pixel,
+                        ask_playground_pixel,
+                        run_mcp_tool_pixel,
+                        add_tool_execution_pixel,
+                    ],
+                    confirmation_response=confirmation.confirmation_response,
                 )
                 responses.append(standard_response_with_confirmation)
 
             except Exception as e:
-                standard_response = StandardResponse(
-                    model_name=model.name,
-                    model_id=model.id,
-                    client=model.client,
-                    response=str(e),
-                    success=False,
+                responses.append(
+                    StandardResponse(
+                        model_name=model.name,
+                        model_id=model.id,
+                        client=model.client,
+                        response=f"Failed to run RunMCPTool: {e}",
+                        success=False,
+                        pixel=[
+                            update_room_pixel,
+                            ask_playground_pixel,
+                            run_mcp_tool_pixel,
+                            add_tool_execution_pixel,
+                        ],
+                    )
                 )
-                responses.append(standard_response)
 
         return responses
