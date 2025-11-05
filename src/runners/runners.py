@@ -15,7 +15,7 @@ available_tests = [
     "Prompt with Image URLs",
     "Tool calling with tool choice",
     "Structured JSON Output Test",
-    "Prompt with Base64 Image Test",
+    # "Prompt with Base64 Image Test",
 ]
 
 
@@ -26,6 +26,18 @@ class TestSelections(BaseModel):
     tool_calling_with_tool_choice: bool = False
     structured_json_test: bool = False
     prompt_with_base64_images: bool = False
+
+
+def map_test_name_to_field(test_name: str) -> Optional[str]:
+    mapping = {
+        "Standard Text Test": "standard_text_test",
+        "Prompt with Image URLs": "prompt_with_image_urls",
+        "Basic Param Values Test": "basic_param_values",
+        "Tool calling with tool choice": "tool_calling_with_tool_choice",
+        "Structured JSON Output Test": "structured_json_test",
+        "Prompt with Base64 Image Test": "prompt_with_base64_images",
+    }
+    return mapping.get(test_name)
 
 
 class TestResults(BaseModel):
