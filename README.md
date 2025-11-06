@@ -4,6 +4,10 @@
 
 This is a Python testing framework for validating AI model responses across different providers through the SEMOSS API. The framework runs standardized tests against multiple models and uses OpenAI models to confirm response quality.
 
+## Docker Setup
+- Create an `.env` file based on the `.env.example` provided in the root directory.
+- `docker-compose up --build` to start the backend and frontend services. Make sure your SEMOSS instance is running.
+
 ## Environment Setup
 
 This project uses `uv` for dependency management.

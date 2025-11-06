@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: playground-testing-backend
+    ports:
+      - "8888:8888"
+    environment:
+      - SEMOSS_ACCESS_KEY=${SEMOSS_ACCESS_KEY}
+      - SEMOSS_SECRET_KEY=${SEMOSS_SECRET_KEY}
+      # - SEMOSS_BASE_URL=${SEMOSS_BASE_URL}
+      - SEMOSS_BASE_URL=${SEMOSS_DOCKER_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: playground-testing-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8888
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
