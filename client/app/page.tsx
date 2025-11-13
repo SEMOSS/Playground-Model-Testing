@@ -6,9 +6,10 @@ import { useTestStore } from "@/lib/store";
 import { ModelSelector } from "@/components/model-selector";
 import { TestSelector } from "@/components/test-selector";
 import { ConfirmerModelSelector } from "@/components/confirmer-model-selector";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Zap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Home() {
@@ -90,86 +91,108 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Test Runner</h1>
-          <p className="text-muted-foreground">
-            Select models and tests to run and analyze results
-          </p>
+    <main className="min-h-screen bg-background">
+      <div className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Zap className="w-6 h-6 text-accent" />
+            <h1 className="text-xl font-bold">Test Runner</h1>
+          </div>
+          <ThemeToggle />
         </div>
+      </div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid gap-6 grid-cols-1 lg:grid-cols-3 mb-8">
-          <div className="lg:col-span-1 space-y-6">
-            <ModelSelector />
-            <TestSelector />
-            <ConfirmerModelSelector />
+      {/* Main content */}
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header section */}
+          <div className="mb-8">
+            <p className="text-muted-foreground max-w-2xl">
+              Select models and tests to run and analyze results
+            </p>
           </div>
 
-          <div className="lg:col-span-2">
-            <Card className="p-6 h-full">
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-semibold mb-2">Summary</h2>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Models selected:
-                      </span>
-                      <span className="font-semibold">
-                        {selectedModels.length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Tests selected:
-                      </span>
-                      <span className="font-semibold">
-                        {selectedTests.length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Confirmer model:
-                      </span>
-                      <span className="font-semibold font-mono text-xs">
-                        {confirmerModel}
-                      </span>
+          {error && (
+            <Alert
+              variant="destructive"
+              className="mb-6 bg-destructive/10 border-destructive/30 text-destructive"
+            >
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ModelSelector />
+              <TestSelector />
+            </div>
+            <ConfirmerModelSelector />
+
+            {/* Summary and controls section */}
+            <div>
+              <Card className="p-8 bg-card border-border/50 shadow-sm">
+                <div className="space-y-8 flex-1">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-accent" />
+                      Summary
+                    </h2>
+                    <div className="space-y-4 bg-muted/40 rounded-lg p-5 border border-border/50">
+                      <div className="flex justify-between items-center pb-4 border-b border-border/50">
+                        <span className="text-muted-foreground">
+                          Models selected:
+                        </span>
+                        <span className="font-semibold text-lg text-accent">
+                          {selectedModels.length}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pb-4 border-b border-border/50">
+                        <span className="text-muted-foreground">
+                          Tests selected:
+                        </span>
+                        <span className="font-semibold text-lg text-accent">
+                          {selectedTests.length}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">
+                          Confirmer model:
+                        </span>
+                        <span className="font-mono text-xs bg-primary/10 text-primary px-3 py-1 rounded-md font-semibold">
+                          {confirmerModel}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="pt-6 border-t">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {selectedModels.length === 0 || selectedTests.length === 0
-                      ? "Please select at least one model and one test to run"
-                      : `Ready to run ${
-                          selectedModels.length * selectedTests.length
-                        } test combinations`}
-                  </p>
-                  <Button
-                    onClick={handleRunTests}
-                    disabled={
-                      isLoading ||
-                      selectedModels.length === 0 ||
-                      selectedTests.length === 0
-                    }
-                    size="lg"
-                    className="w-full gap-2"
-                  >
-                    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {isLoading ? "Running Tests..." : "Run Tests"}
-                  </Button>
+                  <div className="pt-2">
+                    <p className="text-sm text-muted-foreground mb-6">
+                      {selectedModels.length === 0 || selectedTests.length === 0
+                        ? "Please select at least one model and one test to run"
+                        : `Ready to run ${
+                            selectedModels.length * selectedTests.length
+                          } test combinations`}
+                    </p>
+                    <Button
+                      onClick={handleRunTests}
+                      disabled={
+                        isLoading ||
+                        selectedModels.length === 0 ||
+                        selectedTests.length === 0
+                      }
+                      size="lg"
+                      className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all"
+                    >
+                      {isLoading && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
+                      {isLoading ? "Running Tests..." : "Run Tests"}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
