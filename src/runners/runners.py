@@ -58,41 +58,67 @@ def run_selected_tests(
     for model in models:
         results = TestResults()
 
-        standard_text_tester = StandardTextTest(
-            models=[model], confirmer_model=confirmer_model
-        )
-        basic_param_values_tester = BasicParamValuesTest(
-            models=[model], confirmer_model=confirmer_model
-        )
-        image_urls_tester = ImageURLsTest(
-            models=[model], confirmer_model=confirmer_model
-        )
-        tool_calling_with_tool_choice_tester = ToolCallingWithToolChoiceTest(
-            models=[model], confirmer_model=confirmer_model
-        )
-        structured_json_tester = StructuredJSONTest(
-            models=[model], confirmer_model=confirmer_model
-        )
-        image_base64_tester = ImageBase64Test(
-            models=[model], confirmer_model=confirmer_model
-        )
+        if model.capabilities.standard_text_test:
+            standard_text_tester = StandardTextTest(
+                models=[model], confirmer_model=confirmer_model
+            )
+        else:
+            standard_text_tester = None
 
-        if selections.standard_text_test:
+        if model.capabilities.basic_param_values:
+            basic_param_values_tester = BasicParamValuesTest(
+                models=[model], confirmer_model=confirmer_model
+            )
+        else:
+            basic_param_values_tester = None
+
+        if model.capabilities.prompt_with_image_urls:
+            image_urls_tester = ImageURLsTest(
+                models=[model], confirmer_model=confirmer_model
+            )
+        else:
+            image_urls_tester = None
+
+        if model.capabilities.tool_calling_with_tool_choice:
+            tool_calling_with_tool_choice_tester = ToolCallingWithToolChoiceTest(
+                models=[model], confirmer_model=confirmer_model
+            )
+        else:
+            tool_calling_with_tool_choice_tester = None
+
+        if model.capabilities.structured_json_test:
+            structured_json_tester = StructuredJSONTest(
+                models=[model], confirmer_model=confirmer_model
+            )
+        else:
+            structured_json_tester = None
+
+        # if model.capabilities.prompt_with_base64_images:
+        #     image_base64_tester = ImageBase64Test(
+        #         models=[model], confirmer_model=confirmer_model
+        #     )
+        # else:
+        #     image_base64_tester = None
+
+        if selections.standard_text_test and standard_text_tester:
             results.standard_text_test = standard_text_tester.test()[0]
-        if selections.basic_param_values:
+        if selections.basic_param_values and basic_param_values_tester:
             results.basic_param_values = basic_param_values_tester.test()[0]
-        if selections.prompt_with_image_urls:
+        if selections.prompt_with_image_urls and image_urls_tester:
             results.prompt_with_image_urls = image_urls_tester.test()[0]
-        if selections.tool_calling_with_tool_choice:
+        if (
+            selections.tool_calling_with_tool_choice
+            and tool_calling_with_tool_choice_tester
+        ):
             results.tool_calling_with_tool_choice = (
                 tool_calling_with_tool_choice_tester.test()[0]
             )
-        if selections.structured_json_test:
+        if selections.structured_json_test and structured_json_tester:
             results.structured_json_test = structured_json_tester.test()[0]
-        if selections.prompt_with_base64_images:
-            results.prompt_with_base64_images = (
-                image_base64_tester.prompt_with_base64_images()[0]
-            )
+        # if selections.prompt_with_base64_images:
+        #     results.prompt_with_base64_images = (
+        #         image_base64_tester.prompt_with_base64_images()[0]
+        #     )
         selected_responses[model.name] = results
     return selected_responses
 
