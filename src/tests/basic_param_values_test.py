@@ -22,7 +22,7 @@ class BasicParamValuesTest(AbstractTests):
                 room_id=self.room_id,
                 model_id=model.id,
                 prompt="Tell me a story about World War 2.",
-                param_dict={"temperature": 0.7, "max_tokens": 2000, "top_p": 0.9},
+                param_dict={"temperature": 0.7, "max_tokens": 2000},
             )
             pixel = self.pixel_maker.create_ask_playground_pixel(selections)
 
