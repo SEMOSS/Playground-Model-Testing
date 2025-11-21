@@ -1,5 +1,5 @@
 # Playground-Model-Testing
-![README Image](test-images/readme-image.png "Description of the image")
+![README Image](test-images/readme-image.png "screenshot")
 ## Project Overview
 
 This is a Python testing framework for validating AI model responses across different providers through the SEMOSS API. The framework runs standardized tests against multiple models and uses OpenAI models to confirm response quality.
