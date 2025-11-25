@@ -2,12 +2,15 @@ from typing import Optional
 import yfinance as yf
 from src.clients.clients import get_openai_client
 from src.tests.response_models import StandardConfirmation
+from src.utils.models import DeploymentKeys
 
 
 class OpenAIConfirmations:
-    def __init__(self, model: Optional[str] = "gpt-4.1-nano"):
+    def __init__(
+        self, deployment_keys: DeploymentKeys, model: Optional[str] = "gpt-4.1-nano"
+    ):
         self.model = model
-        self.openai_client = get_openai_client()
+        self.openai_client = get_openai_client(deployment_keys.openai_secret_key)
 
     def confirm_image_response(self, model_response: str) -> StandardConfirmation:
         system_prompt = (

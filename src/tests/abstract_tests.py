@@ -4,16 +4,22 @@ from src.utils.models import Model
 from src.utils.constants import CREATE_ROOM_PIXEL
 from src.pixels.pixel_maker import PixelMaker
 from src.confirmations.openai_confirmations import OpenAIConfirmations
+from src.utils.models import DeploymentKeys
 
 
 class AbstractTests:
     def __init__(
-        self, models: list[Model], confirmer_model: Optional[str] = "gpt-4.1-nano"
+        self,
+        models: list[Model],
+        deployment_keys: DeploymentKeys,
+        confirmer_model: Optional[str] = "gpt-4.1-nano",
     ):
         self.models = models
-        self.openai_confirmer = OpenAIConfirmations(model=confirmer_model)
-        self.semoss_client = get_semoss_client()
-        self.openai_client = get_openai_client()
+        self.openai_confirmer = OpenAIConfirmations(
+            deployment_keys=deployment_keys, model=confirmer_model
+        )
+        self.semoss_client = get_semoss_client(deployment_keys)
+        self.openai_client = get_openai_client(deployment_keys.openai_secret_key)
         self.pixel_maker = PixelMaker()
         self.room_id = self.create_room()
 

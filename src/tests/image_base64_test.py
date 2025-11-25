@@ -3,6 +3,7 @@ from src.utils.models import Model
 from src.pixels.pixel_maker import PixelSelections
 from src.tests.response_models import StandardResponse
 from src.tests.abstract_tests import AbstractTests
+from src.utils.models import DeploymentKeys
 
 
 class ImageBase64Test(AbstractTests):
@@ -11,9 +12,12 @@ class ImageBase64Test(AbstractTests):
     """
 
     def __init__(
-        self, models: list[Model], confirmer_model: Optional[str] = "gpt-4.1-nano"
+        self,
+        models: list[Model],
+        deployment_keys: DeploymentKeys,
+        confirmer_model: Optional[str] = "gpt-4.1-nano",
     ):
-        super().__init__(models, confirmer_model)
+        super().__init__(models, deployment_keys, confirmer_model)
 
     def prompt_with_base64_images(self) -> list[StandardResponse]:
         import base64

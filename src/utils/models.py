@@ -1,6 +1,13 @@
 from pydantic import BaseModel
 
 
+class DeploymentKeys(BaseModel):
+    url: str
+    access_key: str
+    secret_key: str
+    openai_secret_key: str
+
+
 class Capabilities(BaseModel):
     standard_text_test: bool = True
     prompt_with_image_urls: bool = True
@@ -35,6 +42,19 @@ models = [
         name="GPT-4o Responses",
         type="OpenAI",
         id="714e633c-ae67-49c8-98ff-b631222b8bca",
+        client="OpenAI - Responses",
+        capabilities=Capabilities(
+            standard_text_test=True,
+            prompt_with_image_urls=True,
+            basic_param_values=True,
+            tool_calling_with_tool_choice=True,
+            structured_json_test=True,
+        ),
+    ),
+    Model(
+        name="GPT 5.1 Responses",
+        type="OpenAI",
+        id="d8d4aaf6-55b9-4a05-9f57-1f213f9d77a3",
         client="OpenAI - Responses",
         capabilities=Capabilities(
             standard_text_test=True,

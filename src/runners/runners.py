@@ -9,6 +9,7 @@ from src.tests.image_urls_test import ImageURLsTest
 from src.tests.tool_calling_with_tool_choice_test import ToolCallingWithToolChoiceTest
 from src.tests.structured_json_test import StructuredJSONTest
 from src.tests.image_base64_test import ImageBase64Test
+from src.utils.models import DeploymentKeys
 
 
 available_tests = [
@@ -52,7 +53,10 @@ class TestResults(BaseModel):
 
 
 def run_tests_for_single_model(
-    model: Model, selections: TestSelections, confirmer_model: Optional[str]
+    model: Model,
+    selections: TestSelections,
+    deployment_keys: DeploymentKeys,
+    confirmer_model: Optional[str],
 ) -> Tuple[str, TestResults]:
     """
     Runs the selected tests for a SINGLE model.
@@ -65,31 +69,41 @@ def run_tests_for_single_model(
     standard_text_tester = None
     if model.capabilities.standard_text_test:
         standard_text_tester = StandardTextTest(
-            models=[model], confirmer_model=confirmer_model
+            models=[model],
+            deployment_keys=deployment_keys,
+            confirmer_model=confirmer_model,
         )
 
     basic_param_values_tester = None
     if model.capabilities.basic_param_values:
         basic_param_values_tester = BasicParamValuesTest(
-            models=[model], confirmer_model=confirmer_model
+            models=[model],
+            deployment_keys=deployment_keys,
+            confirmer_model=confirmer_model,
         )
 
     image_urls_tester = None
     if model.capabilities.prompt_with_image_urls:
         image_urls_tester = ImageURLsTest(
-            models=[model], confirmer_model=confirmer_model
+            models=[model],
+            deployment_keys=deployment_keys,
+            confirmer_model=confirmer_model,
         )
 
     tool_calling_tester = None
     if model.capabilities.tool_calling_with_tool_choice:
         tool_calling_tester = ToolCallingWithToolChoiceTest(
-            models=[model], confirmer_model=confirmer_model
+            models=[model],
+            deployment_keys=deployment_keys,
+            confirmer_model=confirmer_model,
         )
 
     structured_json_tester = None
     if model.capabilities.structured_json_test:
         structured_json_tester = StructuredJSONTest(
-            models=[model], confirmer_model=confirmer_model
+            models=[model],
+            deployment_keys=deployment_keys,
+            confirmer_model=confirmer_model,
         )
 
     # image_base64_tester = None
@@ -125,8 +139,9 @@ def run_tests_for_single_model(
 def run_selected_tests(
     models: list[Model],
     selections: TestSelections,
+    deployment_keys: DeploymentKeys,
     confirmer_model: Optional[str] = "gpt-4.1-nano",
-    batch_size: int = 5,
+    batch_size: Optional[int] = 5,
 ) -> Dict[str, TestResults]:
     """
     Runs tests in parallel batches using ThreadPoolExecutor.
@@ -136,7 +151,11 @@ def run_selected_tests(
     with ThreadPoolExecutor(max_workers=batch_size) as executor:
         future_to_model = {
             executor.submit(
-                run_tests_for_single_model, model, selections, confirmer_model
+                run_tests_for_single_model,
+                model,
+                selections,
+                deployment_keys,
+                confirmer_model,
             ): model
             for model in models
         }
