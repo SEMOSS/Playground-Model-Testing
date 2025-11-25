@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTestStore } from "@/lib/store";
 import { ModelSelector } from "@/components/model-selector";
 import { TestSelector } from "@/components/test-selector";
+import { DeploymentConfig } from "@/components/deployment-config";
 import { ConfirmerModelSelector } from "@/components/confirmer-model-selector";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -20,9 +21,13 @@ export default function Home() {
     selectedModels,
     selectedTests,
     confirmerModel,
+    deploymentUrl,
+    accessKey,
+    secretKey,
     isLoading,
     error,
     setModelsAndTests,
+    setDeploymentConfig,
     setIsLoading,
     setError,
     setResults,
@@ -37,6 +42,11 @@ export default function Home() {
         if (!response.ok) throw new Error("Failed to fetch models and tests");
         const data = await response.json();
         setModelsAndTests(data.models, data.available_tests);
+        setDeploymentConfig(
+          data.deployment_url || "",
+          data.deployment_access_key || "",
+          data.deployment_secret_key || ""
+        );
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
@@ -65,6 +75,9 @@ export default function Home() {
           models: selectedModels,
           tests: selectedTests,
           confirmer_model: confirmerModel,
+          url: deploymentUrl,
+          access_key: accessKey,
+          secret_key: secretKey,
         }),
       });
 
@@ -123,6 +136,7 @@ export default function Home() {
           )}
 
           <div className="space-y-6">
+            <DeploymentConfig />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ModelSelector />
               <TestSelector />
