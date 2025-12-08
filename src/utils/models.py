@@ -52,6 +52,19 @@ models = [
         ),
     ),
     Model(
+        name="GPT 5 Responses Azure",
+        type="OpenAI",
+        id="8caddb25-bd38-46cf-8ad7-c6f55879c26e",
+        client="OpenAI - Responses - Azure",
+        capabilities=Capabilities(
+            standard_text_test=True,
+            prompt_with_image_urls=True,
+            basic_param_values=True,
+            tool_calling_with_tool_choice=True,
+            structured_json_test=True,
+        ),
+    ),
+    Model(
         name="GPT 5.1 Responses",
         type="OpenAI",
         id="d8d4aaf6-55b9-4a05-9f57-1f213f9d77a3",
