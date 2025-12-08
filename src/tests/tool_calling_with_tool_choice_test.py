@@ -147,7 +147,7 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                     )
                     continue
 
-                add_tool_execution_pixel = f'AddToolExecution(engine=["{model_id}"], roomId=["{room_id}"], toolId=["{tool_call_id}"], toolName=["{function_name}"], tool_execution_response=[{run_mcp_tool_response}])'
+                add_tool_execution_pixel = f'AddToolExecution(engine=["{model_id}"], roomId=["{room_id}"], toolId=["{tool_call_id}"], toolName=["{function_name}"], tool_execution_response=["{run_mcp_tool_response}"])'
 
                 try:
                     add_tool_execution_response = self.semoss_client.run_pixel(
