@@ -156,6 +156,19 @@ models = [
         ),
     ),
     Model(
+        name="Gemini 3 Pro Image",
+        type="Google GenAI",
+        id="ff9a50fa-fc84-4eb8-b76a-16bec2cc0bee",
+        client="Google GenAI - Image",
+        capabilities=Capabilities(
+            standard_text_test=True,
+            prompt_with_image_urls=True,
+            basic_param_values=True,
+            tool_calling_with_tool_choice=True,
+            structured_json_test=True,
+        ),
+    ),
+    Model(
         name="Llama3 70B",
         type="OpenAI",
         id="4801422a-5c62-421e-a00c-05c6a9e15de8",
