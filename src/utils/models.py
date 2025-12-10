@@ -103,19 +103,19 @@ models = [
             structured_json_test=True,
         ),
     ),
-    Model(
-        name="Claude Sonnet 4.5 Azure Foundry",
-        type="Anthropic",
-        id="fd0f8824-78ac-4a5c-ba1c-2675b2fee201",
-        client="Anthropic - Azure Foundry",
-        capabilities=Capabilities(
-            standard_text_test=True,
-            prompt_with_image_urls=True,
-            basic_param_values=True,
-            tool_calling_with_tool_choice=True,
-            structured_json_test=True,
-        ),
-    ),
+    # Model(
+    #     name="Claude Sonnet 4.5 Azure Foundry",
+    #     type="Anthropic",
+    #     id="fd0f8824-78ac-4a5c-ba1c-2675b2fee201",
+    #     client="Anthropic - Azure Foundry",
+    #     capabilities=Capabilities(
+    #         standard_text_test=True,
+    #         prompt_with_image_urls=True,
+    #         basic_param_values=True,
+    #         tool_calling_with_tool_choice=True,
+    #         structured_json_test=True,
+    #     ),
+    # ),
     Model(
         name="Claude Sonnet 3.5 Anthropic Bedrock",
         type="Anthropic",
