@@ -233,6 +233,19 @@ models = [
             structured_json_test=True,
         ),
     ),
+    Model(
+        name="Gemini 3 Pro",
+        type="Google GenAI",
+        id="40d1cde5-dc67-41da-964d-ee25d6be1bca",
+        client="Google GenAI",
+        capabilities=Capabilities(
+            standard_text_test=True,
+            prompt_with_image_urls=False,
+            basic_param_values=True,
+            tool_calling_with_tool_choice=True,
+            structured_json_test=True,
+        ),
+    ),
 ]
 
 
