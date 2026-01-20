@@ -33,10 +33,15 @@ class AbstractTests:
         response_block = response.get("responseMessage", None)
         if not response_block:
             raise ValueError("Response message not found")
-        response_message = response_block.get("content", None)
+        parts = response_block.get("parts", None)
+        if not parts:
+            raise ValueError("Parts not found")
+        first_part = parts[0] if parts else None
+        if not first_part:
+            raise ValueError("First part not found")
+        response_message = first_part.get("text", None)
         if not response_message:
-            raise ValueError("Response content not found")
-
+            raise ValueError("Response text not found")
         return response_message
 
     def _extract_tool_response(self, response: dict) -> str:

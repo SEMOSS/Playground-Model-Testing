@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from src.utils.models import Model
 from src.pixels.pixel_maker import PixelSelections
@@ -29,7 +30,7 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                 "instructions": "",
                 "mcp": [
                     {
-                        "id": "29e9e371-9243-4293-ad3b-4be08ef95ab5",
+                        "id": "eb384e0e-82b6-4b9d-9196-a73fbe88a97b",
                         "type": "PROJECT",
                         "name": "MCP",
                     }
@@ -69,12 +70,12 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                 )
                 continue
 
-            function_name = "get_stock_price"
+            function_name = "get_company_news"
             selections = PixelSelections(
                 room_id=self.room_id,
                 model_id=model.id,
-                mcp_tool_id="29e9e371-9243-4293-ad3b-4be08ef95ab5",
-                prompt="What is the price of META?",
+                mcp_tool_id="eb384e0e-82b6-4b9d-9196-a73fbe88a97b",
+                prompt="Get me company news for META",
                 param_dict={"tool_choice": {"type": "AUTO"}},
             )
 
@@ -88,9 +89,15 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                     ask_playground_pixel
                 )
                 responseMessage = ask_playground_response.get("responseMessage", None)
-                tool_response = responseMessage.get("tool_responses", None)
-                if tool_response:
-                    tool_response = tool_response[0]
+                parts = responseMessage.get("parts", None)
+                if not parts:
+                    raise ValueError("Parts not found in response message")
+                first_part = parts[0] if parts else None
+                if not first_part:
+                    raise ValueError("First part not found in parts")
+
+                tool_response = first_part.get("toolCall")
+
                 print(f"Tool Response: {tool_response}")
             except Exception as e:
                 responses.append(
@@ -108,7 +115,7 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
             if tool_response:
                 param_values = tool_response.get("arguments", {})
                 tool_call_id = tool_response.get("id", None)
-                run_mcp_tool_pixel = f'RunMCPTool(project=["29e9e371-9243-4293-ad3b-4be08ef95ab5"], function=["{function_name}"], paramValues=[{param_values}])'
+                run_mcp_tool_pixel = f'RunMCPTool(project=["eb384e0e-82b6-4b9d-9196-a73fbe88a97b"], function=["{function_name}"], paramValues=[{param_values}])'
 
                 try:
                     run_mcp_tool_response = self.semoss_client.run_pixel(
@@ -136,7 +143,7 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                             model_name=model.name,
                             model_id=model.id,
                             client=model.client,
-                            response=f"Failed to run RunMCPToo: {e}",
+                            response=f"Failed to run RunMCPTool: {e}",
                             success=False,
                             pixel=[
                                 update_room_pixel,
@@ -147,8 +154,17 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                     )
                     continue
 
-                add_tool_execution_pixel = f'AddToolExecution(engine=["{model_id}"], roomId=["{room_id}"], toolId=["{tool_call_id}"], toolName=["{function_name}"], tool_execution_response=["{run_mcp_tool_response}"])'
+                escaped_response = json.dumps(run_mcp_tool_response)
 
+                escaped_response = escaped_response.replace("%", "%25")
+
+                add_tool_execution_pixel = (
+                    f'AddToolExecution(engine=["{model_id}"], '
+                    f'roomId=["{room_id}"], '
+                    f'toolId=["{tool_call_id}"], '
+                    f'toolName=["{function_name}"], '
+                    f"tool_execution_response=[{escaped_response}])"
+                )
                 try:
                     add_tool_execution_response = self.semoss_client.run_pixel(
                         add_tool_execution_pixel
