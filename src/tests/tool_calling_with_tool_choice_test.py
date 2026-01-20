@@ -112,38 +112,32 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                 )
                 continue
 
-            if tool_response:
-                param_values = tool_response.get("arguments", {})
-                tool_call_id = tool_response.get("id", None)
-                run_mcp_tool_pixel = f'RunMCPTool(project=["eb384e0e-82b6-4b9d-9196-a73fbe88a97b"], function=["{function_name}"], paramValues=[{param_values}])'
-
-                try:
-                    run_mcp_tool_response = self.semoss_client.run_pixel(
-                        run_mcp_tool_pixel
+            if not tool_response:
+                responses.append(
+                    StandardResponse(
+                        model_name=model.name,
+                        model_id=model.id,
+                        client=model.client,
+                        response="PHASE 1: Tool response not found",
+                        success=False,
+                        pixel=[update_room_pixel, ask_playground_pixel],
                     )
-                    if not run_mcp_tool_response:
-                        responses.append(
-                            StandardResponse(
-                                model_name=model.name,
-                                model_id=model.id,
-                                client=model.client,
-                                response=f"Failed to run RunMCPTool",
-                                success=False,
-                                pixel=[
-                                    update_room_pixel,
-                                    ask_playground_pixel,
-                                    run_mcp_tool_pixel,
-                                ],
-                            )
-                        )
-                        continue
-                except Exception as e:
+                )
+                return responses
+
+            param_values = tool_response.get("arguments", {})
+            tool_call_id = tool_response.get("id", None)
+            run_mcp_tool_pixel = f'RunMCPTool(project=["eb384e0e-82b6-4b9d-9196-a73fbe88a97b"], function=["{function_name}"], paramValues=[{param_values}])'
+
+            try:
+                run_mcp_tool_response = self.semoss_client.run_pixel(run_mcp_tool_pixel)
+                if not run_mcp_tool_response:
                     responses.append(
                         StandardResponse(
                             model_name=model.name,
                             model_id=model.id,
                             client=model.client,
-                            response=f"Failed to run RunMCPTool: {e}",
+                            response=f"Failed to run RunMCPTool",
                             success=False,
                             pixel=[
                                 update_room_pixel,
@@ -153,51 +147,45 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                         )
                     )
                     continue
-
-                escaped_response = json.dumps(run_mcp_tool_response)
-
-                escaped_response = escaped_response.replace("%", "%25")
-
-                add_tool_execution_pixel = (
-                    f'AddToolExecution(engine=["{model_id}"], '
-                    f'roomId=["{room_id}"], '
-                    f'toolId=["{tool_call_id}"], '
-                    f'toolName=["{function_name}"], '
-                    f"tool_execution_response=[{escaped_response}])"
+            except Exception as e:
+                responses.append(
+                    StandardResponse(
+                        model_name=model.name,
+                        model_id=model.id,
+                        client=model.client,
+                        response=f"Failed to run RunMCPTool: {e}",
+                        success=False,
+                        pixel=[
+                            update_room_pixel,
+                            ask_playground_pixel,
+                            run_mcp_tool_pixel,
+                        ],
+                    )
                 )
-                try:
-                    add_tool_execution_response = self.semoss_client.run_pixel(
-                        add_tool_execution_pixel
-                    )
-                    if not add_tool_execution_response:
-                        responses.append(
-                            StandardResponse(
-                                model_name=model.name,
-                                model_id=model.id,
-                                client=model.client,
-                                response=f"Failed to run RunMCPTool",
-                                success=False,
-                                pixel=[
-                                    update_room_pixel,
-                                    ask_playground_pixel,
-                                    run_mcp_tool_pixel,
-                                    add_tool_execution_pixel,
-                                ],
-                            )
-                        )
-                        continue
+                continue
 
-                    print(
-                        "Tool execution added successfully:",
-                        add_tool_execution_response,
-                    )
-                except Exception as e:
+            escaped_response = json.dumps(run_mcp_tool_response)
+
+            escaped_response = escaped_response.replace("%", "%25")
+
+            add_tool_execution_pixel = (
+                f'AddToolExecution(engine=["{model_id}"], '
+                f'roomId=["{room_id}"], '
+                f'toolId=["{tool_call_id}"], '
+                f'toolName=["{function_name}"], '
+                f"tool_execution_response=[{escaped_response}])"
+            )
+            try:
+                add_tool_execution_response = self.semoss_client.run_pixel(
+                    add_tool_execution_pixel
+                )
+                if not add_tool_execution_response:
                     responses.append(
                         StandardResponse(
                             model_name=model.name,
                             model_id=model.id,
                             client=model.client,
-                            response=f"Failed to run RunMCPTool: {e}",
+                            response=f"Failed to run RunMCPTool",
                             success=False,
                             pixel=[
                                 update_room_pixel,
@@ -208,6 +196,28 @@ class ToolCallingWithToolChoiceTest(AbstractTests):
                         )
                     )
                     continue
+
+                print(
+                    "Tool execution added successfully:",
+                    add_tool_execution_response,
+                )
+            except Exception as e:
+                responses.append(
+                    StandardResponse(
+                        model_name=model.name,
+                        model_id=model.id,
+                        client=model.client,
+                        response=f"Failed to run RunMCPTool: {e}",
+                        success=False,
+                        pixel=[
+                            update_room_pixel,
+                            ask_playground_pixel,
+                            run_mcp_tool_pixel,
+                            add_tool_execution_pixel,
+                        ],
+                    )
+                )
+                continue
 
             try:
                 if tool_response:
